@@ -36,3 +36,16 @@ export const createMember = async (
 
   reply.status(201).send(member);
 };
+
+export const getMember = async (req: FastifyRequest, reply: FastifyReply) => {
+  const { id } = req.params as { id: string };
+  const member = await prisma.member.findUnique({
+    where: { id: Number(id) },
+  });
+
+  if (!member) {
+    return reply.status(404).send({ message: "Member not found" });
+  }
+
+  return member;
+};

@@ -1,0 +1,23 @@
+meta {
+  name: Create Member
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/members
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "email": "jane.doe@example.com",
+    "phone": "0411000000",
+    "pronoun": "she/her",
+    "dob": "1995-06-15",
+    "address": "10 Test St, Sydney"
+  }
+}
