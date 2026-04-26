@@ -1,0 +1,21 @@
+meta {
+  name: Update Member
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/members/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "Updated",
+    "level": "ADVANCED",
+    "status": "ACTIVE",
+    "paymentStatus": "PAID",
+    "paidAt": "2026-01-01"
+  }
+}
