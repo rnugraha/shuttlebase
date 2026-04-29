@@ -1,16 +1,37 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import bcrypt from "bcrypt";
 import { buildApp } from "../app";
 import { prisma } from "../lib/prisma";
 
 const app = buildApp();
+let token: string;
 
 beforeAll(async () => {
   await app.ready();
+
+  await prisma.admin.upsert({
+    where: { email: "test-admin@example.com" },
+    update: {},
+    create: {
+      email: "test-admin@example.com",
+      passwordHash: await bcrypt.hash("testpass", 10),
+    },
+  });
+
+  const res = await app.inject({
+    method: "POST",
+    url: "/auth/login",
+    payload: { email: "test-admin@example.com", password: "testpass" },
+  });
+  token = res.json().token;
 });
 
 afterAll(async () => {
+  await prisma.admin.deleteMany({ where: { email: "test-admin@example.com" } });
   await app.close();
 });
+
+const auth = () => ({ Authorization: `Bearer ${token}` });
 
 describe("GET /health", () => {
   it("returns ok", async () => {
@@ -22,16 +43,34 @@ describe("GET /health", () => {
 
 describe("GET /members", () => {
   it("returns an array", async () => {
-    const res = await app.inject({ method: "GET", url: "/members" });
+    const res = await app.inject({
+      method: "GET",
+      url: "/members",
+      headers: auth(),
+    });
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/members" });
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("GET /members/:id", () => {
   it("returns 404 for non-existent member", async () => {
-    const res = await app.inject({ method: "GET", url: "/members/999999" });
+    const res = await app.inject({
+      method: "GET",
+      url: "/members/999999",
+      headers: auth(),
+    });
     expect(res.statusCode).toBe(404);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/members/1" });
+    expect(res.statusCode).toBe(401);
   });
 });
 
@@ -46,6 +85,7 @@ describe("POST /members", () => {
     const res = await app.inject({
       method: "POST",
       url: "/members",
+      headers: auth(),
       payload: {
         firstName: "Test",
         lastName: "User",
@@ -57,6 +97,40 @@ describe("POST /members", () => {
     createdId = body.id;
     expect(body.firstName).toBe("Test");
     expect(body.lastName).toBe("User");
+  });
+
+  it("returns 409 for duplicate email", async () => {
+    const email = `dupe.${Date.now()}@example.com`;
+    const first = await app.inject({
+      method: "POST",
+      url: "/members",
+      headers: auth(),
+      payload: { firstName: "Dupe", lastName: "One", email },
+    });
+    createdId = first.json().id;
+
+    const second = await app.inject({
+      method: "POST",
+      url: "/members",
+      headers: auth(),
+      payload: { firstName: "Dupe", lastName: "Two", email },
+    });
+    expect(second.statusCode).toBe(409);
+  });
+});
+
+describe("POST /members without token", () => {
+  it("returns 401 without token", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/members",
+      payload: {
+        firstName: "Test",
+        lastName: "User",
+        email: "unauth@example.com",
+      },
+    });
+    expect(res.statusCode).toBe(401);
   });
 });
 
@@ -82,6 +156,7 @@ describe("PATCH /members/:id", () => {
     const res = await app.inject({
       method: "PATCH",
       url: `/members/${memberId}`,
+      headers: auth(),
       payload: { firstName: "Updated", level: "ADVANCED" },
     });
     expect(res.statusCode).toBe(200);
@@ -94,9 +169,19 @@ describe("PATCH /members/:id", () => {
     const res = await app.inject({
       method: "PATCH",
       url: "/members/999999",
+      headers: auth(),
       payload: { firstName: "X" },
     });
     expect(res.statusCode).toBe(404);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/members/${memberId}`,
+      payload: { firstName: "X" },
+    });
+    expect(res.statusCode).toBe(401);
   });
 });
 
@@ -122,8 +207,26 @@ describe("DELETE /members/:id", () => {
     const res = await app.inject({
       method: "DELETE",
       url: `/members/${memberId}`,
+      headers: auth(),
     });
     expect(res.statusCode).toBe(200);
     expect(res.json().status).toBe("INACTIVE");
+  });
+
+  it("returns 404 for non-existent member", async () => {
+    const res = await app.inject({
+      method: "DELETE",
+      url: "/members/999999",
+      headers: auth(),
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/members/${memberId}`,
+    });
+    expect(res.statusCode).toBe(401);
   });
 });

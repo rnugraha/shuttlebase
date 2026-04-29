@@ -13,94 +13,117 @@ export const createMember = async (
   req: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const body = req.body as {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-    pronoun?: string;
-    dob?: string;
-    address?: string;
-  };
+  try {
+    const body = req.body as {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string;
+      pronoun?: string;
+      dob?: string;
+      address?: string;
+    };
+    const member = await prisma.member.create({
+      data: {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        email: body.email,
+        phone: body.phone,
+        pronoun: body.pronoun,
+        dob: body.dob ? new Date(body.dob) : undefined,
+        address: body.address,
+      },
+    });
 
-  const member = await prisma.member.create({
-    data: {
-      firstName: body.firstName,
-      lastName: body.lastName,
-      email: body.email,
-      phone: body.phone,
-      pronoun: body.pronoun,
-      dob: body.dob ? new Date(body.dob) : undefined,
-      address: body.address,
-    },
-  });
-
-  reply.status(201).send(member);
+    reply.status(201).send(member);
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      return reply.status(409).send({ message: "Email already exists" });
+    }
+    reply.status(500).send({ message: "Failed to create member" });
+  }
 };
 
 export const getMember = async (req: FastifyRequest, reply: FastifyReply) => {
-  const { id } = req.params as { id: string };
-  const member = await prisma.member.findUnique({
-    where: { id: Number(id) },
-  });
+  try {
+    const { id } = req.params as { id: string };
+    const member = await prisma.member.findUnique({
+      where: { id: Number(id) },
+    });
 
-  if (!member) {
-    return reply.status(404).send({ message: "Member not found" });
+    if (!member) {
+      return reply.status(404).send({ message: "Member not found" });
+    }
+
+    return member;
+  } catch (error) {
+    reply.status(500).send({ message: "Failed to fetch member" });
   }
-
-  return member;
 };
 
 export const updateMember = async (
   req: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = req.params as { id: string };
-
-  const member = await prisma.member.findUnique({
-    where: { id: Number(id) },
-  });
-
-  let updatedMember;
-
-  if (!member) {
-    return reply.status(404).send({ message: "Member not found" });
-  } else {
-    const body = req.body as {
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-      phone?: string;
-      pronoun?: string;
-      dob?: string;
-      address?: string;
-      level?: Level;
-      status?: MemberStatus;
-      paymentStatus?: PaymentStatus;
-      paidAt?: string;
-    };
-
-    updatedMember = await prisma.member.update({
+  try {
+    const { id } = req.params as { id: string };
+    const member = await prisma.member.findUnique({
       where: { id: Number(id) },
-      data: {
-        ...body,
-        dob: body.dob ? new Date(body.dob) : undefined,
-        paidAt: body.paidAt ? new Date(body.paidAt) : undefined,
-      },
     });
-  }
 
-  return updatedMember;
+    let updatedMember;
+
+    if (!member) {
+      return reply.status(404).send({ message: "Member not found" });
+    } else {
+      const body = req.body as {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        phone?: string;
+        pronoun?: string;
+        dob?: string;
+        address?: string;
+        level?: Level;
+        status?: MemberStatus;
+        paymentStatus?: PaymentStatus;
+        paidAt?: string;
+      };
+
+      updatedMember = await prisma.member.update({
+        where: { id: Number(id) },
+        data: {
+          ...body,
+          dob: body.dob ? new Date(body.dob) : undefined,
+          paidAt: body.paidAt ? new Date(body.paidAt) : undefined,
+        },
+      });
+    }
+
+    return updatedMember;
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return reply.status(404).send({ message: "Member not found" });
+    }
+    reply.status(500).send({ message: "Failed to update member" });
+  }
 };
 
 export const deactivateMember = async (
   req: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = req.params as { id: string };
-  const member = await prisma.member.update({
-    where: { id: Number(id) },
-    data: { status: "INACTIVE" },
-  });
-  return member;
+  try {
+    const { id } = req.params as { id: string };
+    const member = await prisma.member.update({
+      where: { id: Number(id) },
+      data: { status: "INACTIVE" },
+    });
+    return member;
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return reply.status(404).send({ message: "Member not found" });
+    }
+    reply.status(500).send({ message: "Failed to deactivate member" });
+  }
 };
