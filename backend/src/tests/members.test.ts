@@ -33,6 +33,15 @@ afterAll(async () => {
 
 const auth = () => ({ Authorization: `Bearer ${token}` });
 
+const memberFixture = {
+  firstName: "Test",
+  lastName: "User",
+  phone: "0411000000",
+  pronoun: "they/them",
+  dob: new Date("1995-01-01"),
+  address: "1 Test St, Sydney",
+};
+
 describe("GET /health", () => {
   it("returns ok", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
@@ -86,11 +95,7 @@ describe("POST /members", () => {
       method: "POST",
       url: "/members",
       headers: auth(),
-      payload: {
-        firstName: "Test",
-        lastName: "User",
-        email: `test.${Date.now()}@example.com`,
-      },
+      payload: { ...memberFixture, email: `test.${Date.now()}@example.com` },
     });
     expect(res.statusCode).toBe(201);
     const body = res.json();
@@ -105,7 +110,7 @@ describe("POST /members", () => {
       method: "POST",
       url: "/members",
       headers: auth(),
-      payload: { firstName: "Dupe", lastName: "One", email },
+      payload: { ...memberFixture, email },
     });
     createdId = first.json().id;
 
@@ -113,13 +118,13 @@ describe("POST /members", () => {
       method: "POST",
       url: "/members",
       headers: auth(),
-      payload: { firstName: "Dupe", lastName: "Two", email },
+      payload: { ...memberFixture, email },
     });
     expect(second.statusCode).toBe(409);
   });
 });
 
-describe("POST /members without token", () => {
+describe("POST /members with failures", () => {
   it("returns 401 without token", async () => {
     const res = await app.inject({
       method: "POST",
@@ -132,6 +137,28 @@ describe("POST /members without token", () => {
     });
     expect(res.statusCode).toBe(401);
   });
+
+  it("returns 400 when required fields are missing", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/members",
+      headers: auth(),
+      payload: { firstName: "Test" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().errors).toBeDefined();
+  });
+
+  it("returns 400 for invalid email format", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/members",
+      headers: auth(),
+      payload: { ...memberFixture, email: "not-an-email" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().errors.email).toBeDefined();
+  });
 });
 
 describe("PATCH /members/:id", () => {
@@ -139,11 +166,7 @@ describe("PATCH /members/:id", () => {
 
   beforeAll(async () => {
     const member = await prisma.member.create({
-      data: {
-        firstName: "Patch",
-        lastName: "Test",
-        email: `patch.${Date.now()}@example.com`,
-      },
+      data: { ...memberFixture, email: `patch.${Date.now()}@example.com` },
     });
     memberId = member.id;
   });
@@ -163,6 +186,28 @@ describe("PATCH /members/:id", () => {
     const body = res.json();
     expect(body.firstName).toBe("Updated");
     expect(body.level).toBe("ADVANCED");
+  });
+
+  it("returns 400 for invalid email format", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/members/${memberId}`,
+      headers: auth(),
+      payload: { email: "not-an-email" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().errors.email).toBeDefined();
+  });
+
+  it("returns 400 for invalid level enum", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/members/${memberId}`,
+      headers: auth(),
+      payload: { level: "EXPERT" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().errors.level).toBeDefined();
   });
 
   it("returns 404 for non-existent member", async () => {
@@ -190,11 +235,7 @@ describe("DELETE /members/:id", () => {
 
   beforeAll(async () => {
     const member = await prisma.member.create({
-      data: {
-        firstName: "Delete",
-        lastName: "Test",
-        email: `delete.${Date.now()}@example.com`,
-      },
+      data: { ...memberFixture, email: `delete.${Date.now()}@example.com` },
     });
     memberId = member.id;
   });

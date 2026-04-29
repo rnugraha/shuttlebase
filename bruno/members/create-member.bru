@@ -10,14 +10,17 @@ post {
   auth: none
 }
 
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJhZG1pbkBzaHV0dGxlYmFzZS5jb20iLCJpYXQiOjE3Nzc0NzAwMzQsImV4cCI6MTc3ODA3NDgzNH0.k3KjkFp3J25axqD2VNcST8GtQXCdgpxSsOGLsoRkjAU
+}
+
 body:json {
   {
-    "firstName": "Jane",
-    "lastName": "Doe",
-    "email": "jane.doe@example.com",
-    "phone": "0411000000",
-    "pronoun": "she/her",
-    "dob": "1995-06-15",
-    "address": "10 Test St, Sydney"
+    "firstName": "John",
+    "lastName": "Hello",
+    "email": "john@hello.com",
+    "phone": "0612345678",
+    "pronoun": "he/him",
+    "dob": "1990-01-15"
   }
 }

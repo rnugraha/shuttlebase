@@ -1,6 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+import { z } from "zod";
 import { Level, MemberStatus, PaymentStatus } from "../generated/prisma";
 import { prisma } from "../lib/prisma";
+import { createMemberSchema, updateMemberSchema } from "../schemas/member";
 
 export const getMembers = async (req: FastifyRequest, reply: FastifyReply) => {
   const members = await prisma.member.findMany({
@@ -14,27 +16,23 @@ export const createMember = async (
   reply: FastifyReply,
 ) => {
   try {
-    const body = req.body as {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone?: string;
-      pronoun?: string;
-      dob?: string;
-      address?: string;
-    };
+    const result = createMemberSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return reply.status(400).send({
+        message: "Validation failed",
+        errors: z.flattenError(result.error).fieldErrors,
+      });
+    }
+
+    const { dob, ...rest } = result.data;
+
     const member = await prisma.member.create({
       data: {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        email: body.email,
-        phone: body.phone,
-        pronoun: body.pronoun,
-        dob: body.dob ? new Date(body.dob) : undefined,
-        address: body.address,
+        ...rest,
+        dob: dob ? new Date(dob) : undefined,
       },
     });
-
     reply.status(201).send(member);
   } catch (error: any) {
     if (error.code === "P2002") {
@@ -67,6 +65,7 @@ export const updateMember = async (
 ) => {
   try {
     const { id } = req.params as { id: string };
+
     const member = await prisma.member.findUnique({
       where: { id: Number(id) },
     });
@@ -76,26 +75,22 @@ export const updateMember = async (
     if (!member) {
       return reply.status(404).send({ message: "Member not found" });
     } else {
-      const body = req.body as {
-        firstName?: string;
-        lastName?: string;
-        email?: string;
-        phone?: string;
-        pronoun?: string;
-        dob?: string;
-        address?: string;
-        level?: Level;
-        status?: MemberStatus;
-        paymentStatus?: PaymentStatus;
-        paidAt?: string;
-      };
+      const result = updateMemberSchema.safeParse(req.body);
 
+      if (!result.success) {
+        return reply.status(400).send({
+          message: "Validation failed",
+          errors: z.flattenError(result.error).fieldErrors,
+        });
+      }
+
+      const { dob, paidAt, ...rest } = result.data;
       updatedMember = await prisma.member.update({
         where: { id: Number(id) },
         data: {
-          ...body,
-          dob: body.dob ? new Date(body.dob) : undefined,
-          paidAt: body.paidAt ? new Date(body.paidAt) : undefined,
+          ...rest,
+          dob: dob ? new Date(dob) : undefined,
+          paidAt: paidAt ? new Date(paidAt) : undefined,
         },
       });
     }

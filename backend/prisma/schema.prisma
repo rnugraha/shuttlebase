@@ -17,10 +17,10 @@ model Member {
   firstName     String
   lastName      String
   email         String        @unique
-  phone         String?
-  pronoun       String?
-  dob           DateTime?
-  address       String?
+  phone         String
+  pronoun       String
+  dob           DateTime
+  address       String
   level         Level         @default(BEGINNER)
   status        MemberStatus  @default(PENDING)
   paymentStatus PaymentStatus @default(UNPAID)
