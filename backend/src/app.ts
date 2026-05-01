@@ -5,7 +5,7 @@ import authRoutes from "./routes/auth";
 import memberRoutes from "./routes/members";
 
 export function buildApp() {
-  const fastify = Fastify({ logger: false });
+  const fastify = Fastify({ logger: process.env.NODE_ENV !== "test" });
 
   fastify.register(cors, {
     origin: process.env.FRONTEND_URL ?? "http://localhost:5173",
