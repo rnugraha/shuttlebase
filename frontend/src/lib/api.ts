@@ -4,6 +4,7 @@ const api = axios.create({
 	baseURL: "http://localhost:3000",
 });
 
+// Get token from localStorage on each request when available
 api.interceptors.request.use((config) => {
 	const token = localStorage.getItem("token");
 	if (token) {
@@ -12,6 +13,7 @@ api.interceptors.request.use((config) => {
 	return config;
 });
 
+// When getting 401-Unauthorised error, remove token and redirect to login page
 api.interceptors.response.use(
 	(response) => response,
 	(error) => {

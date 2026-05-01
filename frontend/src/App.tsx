@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import MembersPage from "./pages/MembersPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import NewMemberPage from "./pages/NewMemberPage";
+import MemberDetailPage from "./pages/MemberDetailPage";
 
 function App() {
 	return (
@@ -12,6 +14,22 @@ function App() {
 				element={
 					<ProtectedRoute>
 						<MembersPage />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/members/new"
+				element={
+					<ProtectedRoute>
+						<NewMemberPage />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/members/:id"
+				element={
+					<ProtectedRoute>
+						<MemberDetailPage />
 					</ProtectedRoute>
 				}
 			/>
