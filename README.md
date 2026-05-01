@@ -4,16 +4,27 @@ Badminton club membership management system.
 
 ## Stack
 
+### Backend
 - **Runtime**: Node.js
 - **Framework**: Fastify 5
 - **Database**: PostgreSQL via Prisma 7 + `@prisma/adapter-pg`
 - **Auth**: JWT (`@fastify/jwt`) + bcrypt
+- **Validation**: Zod
 - **Language**: TypeScript
 - **Linting/Formatting**: Biome
 - **Testing**: Vitest + Fastify inject
 - **API Client**: Bruno
 
+### Frontend
+- **Framework**: React 19 + Vite
+- **Routing**: React Router v7
+- **UI**: shadcn/ui + Tailwind CSS v4
+- **HTTP**: Axios
+- **Language**: TypeScript
+
 ## Getting started
+
+### Backend
 
 ```bash
 cd backend
@@ -40,7 +51,17 @@ Start the server:
 npm run dev
 ```
 
+### Frontend
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
 ## Scripts
+
+### Backend (`cd backend`)
 
 | Command | Description |
 |---|---|
@@ -48,6 +69,14 @@ npm run dev
 | `npm test` | Run tests |
 | `npm run check` | Lint and format check |
 | `npm run format` | Auto-fix formatting |
+
+### Frontend (`cd frontend`)
+
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start dev server |
+| `pnpm build` | Production build |
+| `pnpm lint` | Lint |
 
 ## API
 
