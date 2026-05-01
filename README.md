@@ -19,7 +19,7 @@ Badminton club membership management system.
 - **Framework**: React 19 + Vite
 - **Routing**: React Router v7
 - **UI**: shadcn/ui + Tailwind CSS v4
-- **HTTP**: Axios
+- **HTTP**: Axios (with JWT interceptor + auto-logout on 401)
 - **Language**: TypeScript
 
 ## Getting started
@@ -36,6 +36,9 @@ Copy `.env.example` to `.env` and fill in the values:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/shuttlebase
 JWT_SECRET=your-secret-here
+FRONTEND_URL=http://localhost:5173
+SEED_ADMIN_EMAIL=admin@shuttlebase.com
+SEED_ADMIN_PASSWORD=your-admin-password
 ```
 
 Run migrations and seed:
