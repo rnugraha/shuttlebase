@@ -11,9 +11,9 @@ Badminton club membership management system.
 - **Auth**: JWT (`@fastify/jwt`) + bcrypt
 - **Validation**: Zod
 - **Language**: TypeScript
-- **Linting/Formatting**: Biome
 - **Testing**: Vitest + Fastify inject
 - **API Client**: Bruno
+- **Linting/Formatting**: Biome (shared root config)
 
 ### Frontend
 - **Framework**: React 19 + Vite
@@ -21,6 +21,9 @@ Badminton club membership management system.
 - **UI**: shadcn/ui + Tailwind CSS v4
 - **HTTP**: Axios (with JWT interceptor + auto-logout on 401)
 - **Language**: TypeScript
+
+### Shared
+- **Linting/Formatting**: Biome (root `biome.json` covers both projects)
 
 ## Getting started
 
@@ -79,7 +82,15 @@ pnpm dev
 |---|---|
 | `pnpm dev` | Start dev server |
 | `pnpm build` | Production build |
-| `pnpm lint` | Lint |
+| `pnpm check` | Lint and format check |
+| `pnpm format` | Auto-fix formatting |
+
+### Biome (from workspace root)
+
+| Command | Description |
+|---|---|
+| `biome check .` | Lint and format check both projects |
+| `biome format --write .` | Auto-fix formatting both projects |
 
 ## API
 
