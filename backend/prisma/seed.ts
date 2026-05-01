@@ -139,14 +139,16 @@ const members = [
   },
 ] as const;
 
-const passwordHash = await bcrypt.hash("admin123", 10);
+const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@shuttlebase.com";
+const adminPassword = process.env.SEED_ADMIN_PASSWORD;
 
-const admins = [
-  {
-    email: "admin@shuttlebase.com",
-    passwordHash,
-  },
-] as const;
+if (!adminPassword) {
+  throw new Error("SEED_ADMIN_PASSWORD env var is required to run seed");
+}
+
+const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+const admins = [{ email: adminEmail, passwordHash }] as const;
 
 async function main() {
   await prisma.member.deleteMany();

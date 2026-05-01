@@ -106,6 +106,4 @@ All `/members` routes require a `Bearer` token in the `Authorization` header.
 
 ## Seed credentials
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@shuttlebase.com` | `admin123` |
+Set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` in your `.env` before running `npx prisma db seed`.
