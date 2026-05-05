@@ -9,6 +9,7 @@ export function buildApp() {
 
   fastify.register(cors, {
     origin: process.env.FRONTEND_URL ?? "http://localhost:5173",
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   });
 
   fastify.register(jwt, {
