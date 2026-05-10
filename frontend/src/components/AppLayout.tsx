@@ -1,4 +1,15 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+
+function getEmailFromToken(): string | null {
+	const token = localStorage.getItem("token");
+	if (!token) return null;
+	try {
+		const payload = JSON.parse(atob(token.split(".")[1]));
+		return payload.email ?? null;
+	} catch {
+		return null;
+	}
+}
 import {
 	Sidebar,
 	SidebarContent,
@@ -17,6 +28,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AppLayout() {
 	const navigate = useNavigate();
+	const email = getEmailFromToken();
 
 	const handleLogout = () => {
 		localStorage.removeItem("token");
@@ -44,7 +56,10 @@ export default function AppLayout() {
 					</SidebarGroup>
 				</SidebarContent>
 
-				<SidebarFooter className="p-4">
+				<SidebarFooter className="p-4 space-y-2">
+					{email && (
+						<p className="text-xs text-muted-foreground truncate px-1">{email}</p>
+					)}
 					<Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
 						Logout
 					</Button>
