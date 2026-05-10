@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
 	Table,
@@ -39,17 +39,28 @@ const paymentColors: Record<string, string> = {
 	EXEMPT: "bg-gray-100 text-gray-800",
 };
 
+const DEFAULT_LIMIT = 10;
+
 export default function MembersPage() {
 	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const page = Number(searchParams.get("page") ?? 1);
+	const limit = Number(searchParams.get("limit") ?? DEFAULT_LIMIT);
+
 	const [members, setMembers] = useState<Member[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [total, setTotal] = useState(0);
+	const [totalPages, setTotalPages] = useState(1);
 
 	useEffect(() => {
-		api.get("/members").then((res) => {
-			setMembers(res.data);
+		setLoading(true);
+		api.get("/members", { params: { page, limit } }).then((res) => {
+			setMembers(res.data.data);
+			setTotal(res.data.total);
+			setTotalPages(res.data.totalPages);
 			setLoading(false);
 		});
-	}, []);
+	}, [page, limit]);
 
 	const handleLogout = () => {
 		localStorage.removeItem("token");
@@ -66,7 +77,7 @@ export default function MembersPage() {
 							🏸 Shuttlebase
 						</h1>
 						<p className="text-muted-foreground text-sm">
-							{members.length} members
+							{total} members
 						</p>
 					</div>
 					<div className="flex gap-2">
@@ -144,6 +155,33 @@ export default function MembersPage() {
 								)}
 							</TableBody>
 						</Table>
+					</div>
+				)}
+
+				{/* Pagination */}
+				{totalPages > 1 && (
+					<div className="flex items-center justify-between">
+						<p className="text-sm text-muted-foreground">
+							Page {page} of {totalPages}
+						</p>
+						<div className="flex gap-2">
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={page === 1}
+								onClick={() => setSearchParams({ page: String(page - 1), limit: String(limit) })}
+							>
+								Previous
+							</Button>
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={page === totalPages}
+								onClick={() => setSearchParams({ page: String(page + 1), limit: String(limit) })}
+							>
+								Next
+							</Button>
+						</div>
 					</div>
 				)}
 			</div>

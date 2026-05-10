@@ -1,14 +1,42 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { z } from "zod";
-import { Level, MemberStatus, PaymentStatus } from "../generated/prisma";
 import { prisma } from "../lib/prisma";
 import { createMemberSchema, updateMemberSchema } from "../schemas/member";
 
+const getMembersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
+
 export const getMembers = async (req: FastifyRequest, reply: FastifyReply) => {
-  const members = await prisma.member.findMany({
-    orderBy: { joinedAt: "desc" },
-  });
-  return members;
+  const result = getMembersQuerySchema.safeParse(req.query);
+
+  if (!result.success) {
+    return reply.status(400).send({
+      message: "Invalid query parameters",
+      errors: z.flattenError(result.error).fieldErrors,
+    });
+  }
+
+  const { page, limit } = result.data;
+  const skip = (page - 1) * limit;
+
+  const [members, total] = await Promise.all([
+    prisma.member.findMany({
+      skip,
+      take: limit,
+      orderBy: { joinedAt: "desc" },
+    }),
+    prisma.member.count(),
+  ]);
+
+  return {
+    data: members,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 };
 
 export const createMember = async (
@@ -26,11 +54,12 @@ export const createMember = async (
     }
 
     const { dob, ...rest } = result.data;
+    const dateOfBirth = new Date(dob);
 
     const member = await prisma.member.create({
       data: {
         ...rest,
-        dob: dob ? new Date(dob) : undefined,
+        dob: dateOfBirth ?? undefined,
       },
     });
     reply.status(201).send(member);
