@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+
 import {
 	Table,
 	TableBody,
@@ -62,31 +63,12 @@ export default function MembersPage() {
 		});
 	}, [page, limit]);
 
-	const handleLogout = () => {
-		localStorage.removeItem("token");
-		navigate("/login");
-	};
-
 	return (
-		<div className="min-h-screen bg-background">
-			<div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-				{/* Header */}
-				<div className="flex items-center justify-between">
-					<div>
-						<h1 className="text-2xl font-bold tracking-tight">
-							🏸 Shuttlebase
-						</h1>
-						<p className="text-muted-foreground text-sm">
-							{total} members
-						</p>
-					</div>
-					<div className="flex gap-2">
-						<Button onClick={() => navigate("/members/new")}>Add member</Button>
-						<Button variant="outline" onClick={handleLogout}>
-							Logout
-						</Button>
-					</div>
-				</div>
+		<div className="px-6 py-8 space-y-6">
+			<div className="flex items-center justify-between">
+				<p className="text-muted-foreground text-sm">{total} members</p>
+				<Button onClick={() => navigate("/members/new")}>Add member</Button>
+			</div>
 
 				{/* Table */}
 				{loading ? (
@@ -184,7 +166,6 @@ export default function MembersPage() {
 						</div>
 					</div>
 				)}
-			</div>
 		</div>
 	);
 }
