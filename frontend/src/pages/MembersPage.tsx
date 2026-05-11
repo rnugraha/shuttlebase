@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+	useReactTable,
+	getCoreRowModel,
+	flexRender,
+	type ColumnDef,
+} from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-
 import {
 	Table,
 	TableBody,
@@ -40,6 +45,64 @@ const paymentColors: Record<string, string> = {
 	EXEMPT: "bg-gray-100 text-gray-800",
 };
 
+const columns: ColumnDef<Member>[] = [
+	{
+		id: "name",
+		header: "Name",
+		cell: ({ row }) => (
+			<span className="font-medium">
+				{row.original.firstName} {row.original.lastName}
+				<span className="text-muted-foreground text-xs ml-1">
+					{row.original.pronoun}
+				</span>
+			</span>
+		),
+	},
+	{
+		accessorKey: "email",
+		header: "Email",
+	},
+	{
+		accessorKey: "phone",
+		header: "Phone",
+	},
+	{
+		accessorKey: "level",
+		header: "Level",
+		cell: ({ getValue }) => (getValue() as string).toLowerCase(),
+	},
+	{
+		accessorKey: "status",
+		header: "Status",
+		cell: ({ getValue }) => {
+			const value = getValue() as string;
+			return (
+				<span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[value]}`}>
+					{value}
+				</span>
+			);
+		},
+	},
+	{
+		accessorKey: "paymentStatus",
+		header: "Payment",
+		cell: ({ getValue }) => {
+			const value = getValue() as string;
+			return (
+				<span className={`text-xs px-2 py-1 rounded-full font-medium ${paymentColors[value]}`}>
+					{value}
+				</span>
+			);
+		},
+	},
+	{
+		accessorKey: "joinedAt",
+		header: "Joined",
+		cell: ({ getValue }) =>
+			new Date(getValue() as string).toLocaleDateString("en-NL"),
+	},
+];
+
 const DEFAULT_LIMIT = 10;
 
 export default function MembersPage() {
@@ -63,6 +126,12 @@ export default function MembersPage() {
 		});
 	}, [page, limit]);
 
+	const table = useReactTable({
+		data: members,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+	});
+
 	return (
 		<div className="px-6 py-8 space-y-6">
 			<div className="flex items-center justify-between">
@@ -70,102 +139,77 @@ export default function MembersPage() {
 				<Button onClick={() => navigate("/members/new")}>Add member</Button>
 			</div>
 
-				{/* Table */}
-				{loading ? (
-					<p className="text-muted-foreground text-sm">Loading...</p>
-				) : (
-					<div className="rounded-lg border">
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Name</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Phone</TableHead>
-									<TableHead>Level</TableHead>
-									<TableHead>Status</TableHead>
-									<TableHead>Payment</TableHead>
-									<TableHead>Joined</TableHead>
+			{loading ? (
+				<p className="text-muted-foreground text-sm">Loading...</p>
+			) : (
+				<div className="rounded-lg border">
+					<Table>
+						<TableHeader>
+							{table.getHeaderGroups().map((headerGroup) => (
+								<TableRow key={headerGroup.id}>
+									{headerGroup.headers.map((header) => (
+										<TableHead key={header.id}>
+											{flexRender(header.column.columnDef.header, header.getContext())}
+										</TableHead>
+									))}
 								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{members.length === 0 ? (
-									<TableRow>
-										<TableCell
-											colSpan={7}
-											className="text-center text-muted-foreground py-8"
-										>
-											No members yet
-										</TableCell>
+							))}
+						</TableHeader>
+						<TableBody>
+							{table.getRowModel().rows.length === 0 ? (
+								<TableRow>
+									<TableCell
+										colSpan={columns.length}
+										className="text-center text-muted-foreground py-8"
+									>
+										No members yet
+									</TableCell>
+								</TableRow>
+							) : (
+								table.getRowModel().rows.map((row) => (
+									<TableRow
+										key={row.id}
+										className="cursor-pointer hover:bg-muted/50"
+										onClick={() => navigate(`/members/${row.original.id}`)}
+									>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell key={cell.id}>
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+											</TableCell>
+										))}
 									</TableRow>
-								) : (
-									members.map((member) => (
-										<TableRow
-											key={member.id}
-											className="cursor-pointer hover:bg-muted/50"
-											onClick={() => navigate(`/members/${member.id}`)}
-										>
-											<TableCell className="font-medium">
-												{member.firstName} {member.lastName}
-												<span className="text-muted-foreground text-xs ml-1">
-													{member.pronoun}
-												</span>
-											</TableCell>
-											<TableCell>{member.email}</TableCell>
-											<TableCell>{member.phone}</TableCell>
-											<TableCell className="capitalize lowercase first-letter:uppercase">
-												{member.level.toLowerCase()}
-											</TableCell>
-											<TableCell>
-												<span
-													className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[member.status]}`}
-												>
-													{member.status}
-												</span>
-											</TableCell>
-											<TableCell>
-												<span
-													className={`text-xs px-2 py-1 rounded-full font-medium ${paymentColors[member.paymentStatus]}`}
-												>
-													{member.paymentStatus}
-												</span>
-											</TableCell>
-											<TableCell className="text-muted-foreground text-sm">
-												{new Date(member.joinedAt).toLocaleDateString("en-NL")}
-											</TableCell>
-										</TableRow>
-									))
-								)}
-							</TableBody>
-						</Table>
-					</div>
-				)}
+								))
+							)}
+						</TableBody>
+					</Table>
+				</div>
+			)}
 
-				{/* Pagination */}
-				{totalPages > 1 && (
-					<div className="flex items-center justify-between">
-						<p className="text-sm text-muted-foreground">
-							Page {page} of {totalPages}
-						</p>
-						<div className="flex gap-2">
-							<Button
-								variant="outline"
-								size="sm"
-								disabled={page === 1}
-								onClick={() => setSearchParams({ page: String(page - 1), limit: String(limit) })}
-							>
-								Previous
-							</Button>
-							<Button
-								variant="outline"
-								size="sm"
-								disabled={page === totalPages}
-								onClick={() => setSearchParams({ page: String(page + 1), limit: String(limit) })}
-							>
-								Next
-							</Button>
-						</div>
+			{totalPages > 1 && (
+				<div className="flex items-center justify-between">
+					<p className="text-sm text-muted-foreground">
+						Page {page} of {totalPages}
+					</p>
+					<div className="flex gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={page === 1}
+							onClick={() => setSearchParams({ page: String(page - 1), limit: String(limit) })}
+						>
+							Previous
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={page === totalPages}
+							onClick={() => setSearchParams({ page: String(page + 1), limit: String(limit) })}
+						>
+							Next
+						</Button>
 					</div>
-				)}
+				</div>
+			)}
 		</div>
 	);
 }
