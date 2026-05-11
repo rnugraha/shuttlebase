@@ -6,6 +6,10 @@ import { createMemberSchema, updateMemberSchema } from "../schemas/member";
 const getMembersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
+  search: z.string().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE", "PENDING", "WAITLIST", "TRYOUT"]).optional(),
+  level: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
+  paymentStatus: z.enum(["PAID", "UNPAID", "OVERDUE", "EXEMPT"]).optional(),
 });
 
 export const getMembers = async (req: FastifyRequest, reply: FastifyReply) => {
@@ -18,16 +22,25 @@ export const getMembers = async (req: FastifyRequest, reply: FastifyReply) => {
     });
   }
 
-  const { page, limit } = result.data;
+  const { page, limit, search, status, level, paymentStatus } = result.data;
   const skip = (page - 1) * limit;
 
-  const [members, total] = await Promise.all([
-    prisma.member.findMany({
-      skip,
-      take: limit,
-      orderBy: { joinedAt: "desc" },
+  const where = {
+    ...(search && {
+      OR: [
+        { firstName: { contains: search, mode: "insensitive" as const } },
+        { lastName: { contains: search, mode: "insensitive" as const } },
+        { email: { contains: search, mode: "insensitive" as const } },
+      ],
     }),
-    prisma.member.count(),
+    ...(status && { status }),
+    ...(level && { level }),
+    ...(paymentStatus && { paymentStatus }),
+  };
+
+  const [members, total] = await Promise.all([
+    prisma.member.findMany({ skip, take: limit, where, orderBy: { joinedAt: "desc" } }),
+    prisma.member.count({ where }),
   ]);
 
   return {
