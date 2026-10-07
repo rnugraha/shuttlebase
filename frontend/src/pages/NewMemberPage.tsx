@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Select,
 	SelectContent,
@@ -53,17 +54,13 @@ export default function NewMemberPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-background">
-			<div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
-				{/* Header */}
-				<div className="flex items-center gap-4">
-					<Button variant="outline" onClick={() => navigate("/members")}>
-						← Back
-					</Button>
-					<h1 className="text-2xl font-bold tracking-tight">Add member</h1>
-				</div>
+		<div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+			<Button variant="ghost" size="sm" onClick={() => navigate("/members")}>
+				← Back
+			</Button>
 
-				{/* Form */}
+			<Card>
+				<CardContent className="pt-6">
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-2">
@@ -180,7 +177,8 @@ export default function NewMemberPage() {
 						</Button>
 					</div>
 				</form>
-			</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

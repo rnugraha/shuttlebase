@@ -1,15 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-
-function getEmailFromToken(): string | null {
-	const token = localStorage.getItem("token");
-	if (!token) return null;
-	try {
-		const payload = JSON.parse(atob(token.split(".")[1]));
-		return payload.email ?? null;
-	} catch {
-		return null;
-	}
-}
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
 	Sidebar,
 	SidebarContent,
@@ -25,9 +14,33 @@ import {
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+
+const pageTitles: Record<string, string> = {
+	"/members": "Members",
+	"/members/new": "Add member",
+};
+
+function getTitle(pathname: string) {
+	if (pageTitles[pathname]) return pageTitles[pathname];
+	if (/^\/members\/\d+$/.test(pathname)) return "Member details";
+	return "";
+}
+
+function getEmailFromToken(): string | null {
+	const token = localStorage.getItem("token");
+	if (!token) return null;
+	try {
+		const payload = JSON.parse(atob(token.split(".")[1]));
+		return payload.email ?? null;
+	} catch {
+		return null;
+	}
+}
 
 export default function AppLayout() {
 	const navigate = useNavigate();
+	const { pathname } = useLocation();
 	const email = getEmailFromToken();
 
 	const handleLogout = () => {
@@ -67,8 +80,10 @@ export default function AppLayout() {
 			</Sidebar>
 
 			<SidebarInset>
-				<header className="flex h-12 items-center gap-2 border-b px-4">
-					<SidebarTrigger />
+				<header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+					<SidebarTrigger className="-ml-1" />
+					<Separator orientation="vertical" className="h-4" />
+					<span className="text-sm font-medium">{getTitle(pathname)}</span>
 				</header>
 				<main className="flex-1 overflow-auto">
 					<Outlet />

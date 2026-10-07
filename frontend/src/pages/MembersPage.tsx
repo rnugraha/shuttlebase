@@ -8,6 +8,8 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Select,
 	SelectContent,
@@ -78,11 +80,7 @@ const columns: ColumnDef<Member>[] = [
 		header: "Status",
 		cell: ({ getValue }) => {
 			const value = getValue() as string;
-			return (
-				<span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[value]}`}>
-					{value}
-				</span>
-			);
+			return <Badge className={statusColors[value]}>{value}</Badge>;
 		},
 	},
 	{
@@ -90,11 +88,7 @@ const columns: ColumnDef<Member>[] = [
 		header: "Payment",
 		cell: ({ getValue }) => {
 			const value = getValue() as string;
-			return (
-				<span className={`text-xs px-2 py-1 rounded-full font-medium ${paymentColors[value]}`}>
-					{value}
-				</span>
-			);
+			return <Badge className={paymentColors[value]}>{value}</Badge>;
 		},
 	},
 	{
@@ -217,7 +211,30 @@ export default function MembersPage() {
 			</div>
 
 			{loading ? (
-				<p className="text-muted-foreground text-sm">Loading...</p>
+				<div className="rounded-lg border">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								{columns.map((col) => (
+									<TableHead key={String(col.id ?? ("accessorKey" in col ? col.accessorKey : ""))}>
+										<Skeleton className="h-4 w-20" />
+									</TableHead>
+								))}
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{Array.from({ length: 5 }).map((_, i) => (
+								<TableRow key={i}>
+									{columns.map((col) => (
+										<TableCell key={String(col.id ?? ("accessorKey" in col ? col.accessorKey : ""))}>
+											<Skeleton className="h-4 w-full" />
+										</TableCell>
+									))}
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</div>
 			) : (
 				<div className="rounded-lg border">
 					<Table>

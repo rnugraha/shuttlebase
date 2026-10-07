@@ -20,8 +20,6 @@ export default function LoginPage() {
 
 		try {
 			const res = await api.post("/auth/login", { email, password });
-			// eslint-disable-next-line no-debugger
-			debugger;
 			localStorage.setItem("token", res.data.token);
 			navigate("/members");
 		} catch (err) {
@@ -34,8 +32,8 @@ export default function LoginPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background">
-			<div className="w-full max-w-sm space-y-6 p-8">
+		<div className="min-h-screen flex items-center justify-center bg-muted/30">
+			<div className="w-full max-w-sm space-y-6 p-8 bg-background rounded-xl border shadow-sm">
 				<div className="space-y-2 text-center">
 					<h1 className="text-3xl font-bold tracking-tight">🏸 Shuttlebase</h1>
 					<p className="text-muted-foreground text-sm">Admin login</p>

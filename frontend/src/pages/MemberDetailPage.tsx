@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Select,
 	SelectContent,
@@ -86,21 +87,24 @@ export default function MemberDetailPage() {
 		return <div className="p-8 text-muted-foreground">Loading...</div>;
 
 	return (
-		<div className="min-h-screen bg-background">
-			<div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
-				{/* Header */}
+		<div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+			<div className="flex items-center justify-between">
+				<Button variant="ghost" size="sm" onClick={() => navigate("/members")}>
+					← Back
+				</Button>
+				<Button variant="destructive" size="sm" onClick={handleDeactivate}>
+					Deactivate
+				</Button>
+			</div>
+
+			<Card>
+				<CardContent className="pt-6">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-4">
-						<Button variant="outline" onClick={() => navigate("/members")}>
-							← Back
-						</Button>
-						<h1 className="text-2xl font-bold tracking-tight">
+						<h1 className="text-lg font-semibold">
 							{form.firstName} {form.lastName}
 						</h1>
 					</div>
-					<Button variant="destructive" onClick={handleDeactivate}>
-						Deactivate
-					</Button>
 				</div>
 
 				{/* Form */}
@@ -266,7 +270,8 @@ export default function MemberDetailPage() {
 						</Button>
 					</div>
 				</form>
-			</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }
